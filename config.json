@@ -1,6 +1,10 @@
 {
-  "student_id": "",
-  "password": "",
-  "profileid": "1611",
-  "semester_id":"162"
+    "student_id": "",
+    "password": "",
+    "semester_id": "162",
+    "select_id": "1",
+    "white_list": [],
+    "wnp": "name",
+    "black_list": ["A", "B"],
+    "bnp": "name"
 }

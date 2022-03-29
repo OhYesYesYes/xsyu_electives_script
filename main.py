@@ -2,6 +2,7 @@ import json
 import re
 from time import sleep
 import requests
+from soupsieve import select
 from xsyu_login import get_cookie
 
 
@@ -12,33 +13,69 @@ def get_config(path="./config.json"):
     f.close()
     return info_dict
 
-def grap_class(profileid,cookies):
-    url1 = "http://jwxt.xsyu.edu.cn/eams/stdElectCourse!data.action?profileId=" + profileid
-    url2 = "http://jwxt.xsyu.edu.cn/eams/stdElectCourse!defaultPage.action?electionProfile.id=" + profileid
+
+def get_profileid(cookies):
     headers = {"Cookie": cookies}
-    # res = requests.get(url=url2, verify=False, headers=headers)
-    ret = requests.get(url=url1, verify=False, headers=headers)
-    print(ret.status_code)
-    while ret.status_code != 200:
-        # res = requests.get(url=url2, verify=False, headers=headers)
+    # 获得profileId
+    url_for_id = "http://jwxt.xsyu.edu.cn/eams/stdElectCourse.action"
+    re_id = requests.get(url=url_for_id, verify=False, headers=headers)
+    while(re_id.status_code != 200):
+        re_id = requests.get(url=url_for_id, verify=False, headers=headers)
+    id_str = re_id.text.split("confirmElection(")
+    profileid = id_str[1][:4]
+    return profileid
+
+
+def grap_class(cookies):
+
+    headers = {"Cookie": cookies}
+    # 更快的方法是提前抓取profile填入
+    profileid = get_profileid(cookies)
+    # 循环到选课时间
+    url1 = "http://jwxt.xsyu.edu.cn/eams/stdElectCourse!defaultPage.action?electionProfile.id=" + profileid
+    url2 = "http://jwxt.xsyu.edu.cn/eams/stdElectCourse!data.action?profileId=" + profileid
+    requests.get(url=url1, verify=False, headers=headers)  # 求稳
+    re_data = requests.get(url=url2, verify=False, headers=headers)
+    while re_data.status_code != 200:
+        requests.get(url=url1, verify=False, headers=headers)
         sleep(1)
-        ret = requests.get(url=url1, verify=False, headers=headers)
-        print(ret.status_code)
-    text = ret.text[22:-1]
+        re_data = requests.get(url=url2, verify=False, headers=headers)
+        print(re_data.status_code)
+    text = re_data.text[22:-1]
     list = text.split(",{id")
-    # print(list)
     lists = []
+    white_list = get_config()["white_list"]
+    black_list = get_config()["black_list"]
+    # name是课程名 ， teachers是老师
+    wnp = get_config()["wnp"]
+    bnp = get_config()["bnp"]
+
+    # 处理json数据
     for i in list:
         i = "{'id'" + i
         i = i.replace("'", "\"")
         i = re.sub(r',(.*?):', r',"\1":', i)
         i = i[:i.index(',"remark')] + "}"
         jsons = json.loads(i)
-        if (jsons['name'].find('定向') != -1 or jsons['name'].find('世界') != -1 or jsons['name'].find('婚') != -1 or jsons[
-            'name'].find('中国史') != -1 or jsons['name'].find('心理') != -1):
+        # 白名单
+        q = False
+        for j in white_list:
+            q = True
+            if(jsons[wnp].find(j) != -1):
+                lists.append(jsons['id'])
+                print(jsons[wnp])
+                break
+        if(q):
+            continue
+        # 黑名单
+        p = True
+        for k in black_list:
+            if(jsons[bnp].find(k) != -1):
+                p = False
+                break
+        if(p):
             lists.append(jsons['id'])
-            print(jsons['name'])
-    print(lists)
+            print(jsons[bnp])
 
     # 抢课
     url3 = "http://jwxt.xsyu.edu.cn/eams/stdElectCourse!batchOperator.action?profileId=" + profileid
@@ -51,12 +88,12 @@ def grap_class(profileid,cookies):
             if rew.text.find('失败') < 0:
                 print("成功")
 
+
 def main():
     config_info = get_config()
-    profileid = config_info["profileid"]
-    cookies = get_cookie(config_info["student_id"], config_info["password"], config_info["semester_id"])
-    grap_class(profileid,cookies)
-
+    cookies = get_cookie(
+        config_info["student_id"], config_info["password"], config_info["semester_id"])
+    grap_class(cookies)
 
 
 # //2021级1616
