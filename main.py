@@ -7,7 +7,7 @@ from soupsieve import select
 from xsyu_login import get_cookie, waiting
 import os
 
-def get_config(path="./config1.json"):
+def get_config(path="./config.json"):
     info_dict = {}
     with open(path, "r", encoding="utf-8") as f:
         info_dict = json.load(f)
@@ -19,9 +19,9 @@ def get_profileid(cookies):
     headers = {"Cookie": cookies}
     # 获得profileId
     url_for_id = "http://jwxt.xsyu.edu.cn/eams/stdElectCourse.action"
-    re_id = requests.get(url=url_for_id, verify=False, headers=headers)
+    re_id = requests.get(url=url_for_id, headers=headers)
     while (re_id.status_code != 200):
-        re_id = requests.get(url=url_for_id, verify=False, headers=headers)
+        re_id = requests.get(url=url_for_id, headers=headers)
     id_str = re_id.text.split("confirmElection(")
     profileid = id_str[1][:4]
     return profileid
@@ -30,7 +30,12 @@ def get_profileid(cookies):
 def grap_class(cookies):
     headers = {"Cookie": cookies}
     # 更快的方法是提前抓取profile填入
-    profileid = get_profileid(cookies)
+    try:
+        profileid = get_profileid(cookies)
+    except:
+        print("发生了错误，可能是账户密码没有配置或者错误!")
+        os.system("pause")
+        return
     # 循环到选课时间
     url1 = "http://jwxt.xsyu.edu.cn/eams/stdElectCourse!defaultPage.action?electionProfile.id=" + profileid
     url2 = "http://jwxt.xsyu.edu.cn/eams/stdElectCourse!data.action?profileId=" + profileid
@@ -87,7 +92,7 @@ def grap_class(cookies):
         for i in lists:
             postdata = {"optype": "true",
                         "operator0": str(i) + ":true:0"}
-            rew = requests.session().post(url=url3, verify=False,
+            rew = requests.session().post(url=url3, 
                                           data=postdata, headers=headers)
             if rew.text.find('失败') < 0:
                 print("抢课成功!")
@@ -100,11 +105,9 @@ def main():
         config_info = get_config()
     except:
         print("没有找到config.json配置文件，请将配置文件放在同一目录!")
-
         os.system("pause")
         return
-    cookies = get_cookie(
-        config_info["student_id"], config_info["password"], config_info["semester_id"])
+    cookies = get_cookie(config_info["student_id"], config_info["password"], config_info["semester_id"])
     grap_class(cookies)
 
 
