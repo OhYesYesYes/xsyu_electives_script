@@ -4,7 +4,7 @@ import time
 from time import sleep
 import requests
 from soupsieve import select
-from xsyu_login import get_cookie, waiting
+from xsyu_login import get_cookie, waiting,do_not_access_fast
 import os
 
 def get_config(path="./config.json"):
@@ -19,9 +19,13 @@ def get_profileid(cookies):
     headers = {"Cookie": cookies}
     # 获得profileId
     url_for_id = "http://jwxt.xsyu.edu.cn/eams/stdElectCourse.action"
-    re_id = requests.get(url=url_for_id, headers=headers)
-    while (re_id.status_code != 200):
+    re_id =  ""
+    while True:
         re_id = requests.get(url=url_for_id, headers=headers)
+        if do_not_access_fast(re_id.text) != 0 and re_id.status_code != 200:
+            re_id = requests.get(url=url_for_id, headers=headers)
+        else:
+            break
     id_str = re_id.text.split("confirmElection(")
     profileid = id_str[1][:4]
     return profileid
