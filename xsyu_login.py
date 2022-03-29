@@ -2,6 +2,8 @@ import time
 import requests
 import re
 import json
+import datetime
+
 
 def do_not_access_fast(html):
     rst = re.search(r"请不要过快点击", html)
@@ -61,6 +63,95 @@ def login_action(usr: str, passwd: str):
 
 def get_cookie(usr: str, passwd: str, semester_id=142):
     set_cookie = login_action(usr, passwd).split(";")
-    cookie = "semester.id=" + str(semester_id) + "; " + set_cookie[0]+";"
-    print("得到cookie:"+cookie)
+    cookie = "semester.id=" + str(semester_id) + "; " + set_cookie[0] + ";"
+    print("得到cookie:" + cookie)
     return cookie
+
+
+def progress(place, end_place, time_str="", width=50):
+    '''
+    打印进度条
+    :param place: 目前的进度位置，类型为数字，不能为0
+    :param end_place: 结束位置，类型为数字
+    :param time_str: 可选择打印实花费时间和剩余时间，建议配合get_remaining_time使用
+    :param width: 进度条宽度
+    '''
+    percent = place / end_place
+    percent = percent * 100
+    if percent >= 100:
+        percent = 100
+    show_str = ('[%%-%ds]' % width) % (int(width * percent / 100) * "#")  # 字符串拼接的嵌套使用
+    print('\r%s %5.2f%% %s' % (show_str, percent, time_str), end='')
+
+    if percent == 100:
+        print('\n')
+
+
+def print_remaining_time(time_beg, time_now, place, end_place):
+    '''
+    直接打印花费时间，剩余时间按
+    :param time_beg: 开始的时间，time_beg = datetime.datetime.now()获得
+    :param time_now: 现在的时间，time_now = datetime.datetime.now()获得
+    :param place: 现在进度的位置，类型为数字，不能为0
+    :param end_place: 结束的位置，类型为数字
+    :return:
+    '''
+    #
+
+    # 定义空时间
+    tmep_time = datetime.datetime.strptime('00:00:00', '%H:%M:%S')
+    # 计算进度
+    persent = place / end_place
+    # 计算花费时间
+    delta = time_now - time_beg
+    # 计算剩余时间
+    remnant = delta / persent - delta
+    # 格式化花费时间
+    delta = tmep_time + delta
+    # 格式化剩余时间
+    remnant = tmep_time + remnant
+    print('\r %s  预计还剩: %s' % (delta.strftime('%H:%M:%S'), remnant.strftime('%H:%M:%S')), end='')
+
+
+def get_remaining_time(time_beg, time_now, place, end_place):
+    '''
+    返回花费时间，剩余时间按
+    :param time_beg: 开始的时间，time_beg = datetime.datetime.now()获得
+    :param time_now: 现在的时间，time_now = datetime.datetime.now()获得
+    :param place: 现在进度的位置，类型为数字，不能为0
+    :param end_place: 结束的位置，类型为数字
+    :return:
+    '''
+
+    # 定义空时间
+    tmep_time = datetime.datetime.strptime('00:00:00', '%H:%M:%S')
+    # 计算进度
+    persent = place / end_place
+    # 计算花费时间
+    delta = time_now - time_beg
+    # 计算剩余时间
+    remnant = delta / persent - delta
+    # 格式化花费时间
+    delta = tmep_time + delta
+    # 格式化剩余时间
+    remnant = tmep_time + remnant
+
+    rst = ' 花费: %s  预计还剩: %s' % (delta.strftime('%H:%M:%S'), remnant.strftime('%H:%M:%S'))
+    return rst
+
+
+def waiting(text, times, max_symbol_num=5):
+    '''
+    手动等待,打印等待效果
+    :param text: 文本
+    :param times: 等待次数,默认3
+    :param max_symbol_num: 动画圆点最大个数,默认5个
+    '''
+    symbol = '.'
+    times = times % max_symbol_num
+    for i in range(times + 1):
+        symbol = symbol + '.'
+        if symbol == ('.' * (max_symbol_num + 1)):
+            symbol = '.'
+    print('\r{}{}'.format(text, symbol), end='')
+
