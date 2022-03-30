@@ -1,9 +1,9 @@
 {
-    "student_id": "201907071004",
-    "password": "7511100wang",
+    "student_id": "",
+    "password": "",
     "semester_id": "162",
     "select_id": "1",
-    "white_list": ["饮食与养生","集邮基础","音乐鉴赏"],
+    "white_list": ["饮食与养生","数学"],
     "wnp": "name",
     "black_list": [],
     "bnp": "name"
