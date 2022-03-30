@@ -35,12 +35,20 @@ def get_profileid(cookies):
 def grap_class(cookies):
     headers = {"Cookie": cookies}
     # 更快的方法是提前抓取profile填入
+    profileid = "1611"
     try:
         profileid = get_profileid(cookies)
     except:
-        print("发生了错误，可能是账户密码没有配置或者错误!")
-        os.system("pause")
-        return
+        print("发生了错误导致无法请求到profileid，可能是账户密码没有配置或者错误!也可能是教务系统限制了登陆人数")
+        choose = print("需要手动输入吗?[N/y]")
+        if choose != "y" or choose != "Y":
+            return
+        else:
+            print("2021级: 1616")
+            print("2020级: 1613")
+            print("2019级: 1611")
+            print("2022/3/29统计")
+            profileid = input("请输入profileid:")
     # 循环到选课时间
     url1 = "http://jwxt.xsyu.edu.cn/eams/stdElectCourse!defaultPage.action?electionProfile.id=" + profileid
     url2 = "http://jwxt.xsyu.edu.cn/eams/stdElectCourse!data.action?profileId=" + profileid
@@ -110,10 +118,11 @@ def main():
         config_info = get_config()
     except:
         print("没有找到config.json配置文件，请将配置文件放在同一目录!")
-        print("也有可能你的config.json文件配置错误，请检查！注意在[]中添加内容时需要添加引号")
+        print("也有可能你的config.json文件配置错误，请检查！注意在[]中添加内容时需要添加引号以及utf-8")
         os.system("pause")
         return
     cookies = get_cookie(config_info["student_id"], config_info["password"], config_info["semester_id"])
+    #cookies = "cookie:semester.id=162; JSESSIONID=A4B6BBCEA8879F59D6ED14AC9AD28864.-node1;"
     grap_class(cookies)
 
 
