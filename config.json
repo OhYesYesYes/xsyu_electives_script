@@ -3,7 +3,7 @@
     "password": "7511100wang",
     "semester_id": "162",
     "select_id": "1",
-    "white_list": ["饮食"],
+    "white_list": ["饮食与养生","音乐鉴赏","集邮基础"],
     "wnp": "name",
     "black_list": [],
     "bnp": "name"

@@ -24,6 +24,7 @@ def get_profileid(cookies):
         re_id = requests.get(url=url_for_id, headers=headers)
         if do_not_access_fast(re_id.text) != 0 and re_id.status_code != 200:
             re_id = requests.get(url=url_for_id, headers=headers)
+            print("触发防爬或请求错误,正在重试...")
         else:
             break
     id_str = re_id.text.split("confirmElection(")
@@ -49,7 +50,7 @@ def grap_class(cookies):
         requests.get(url=url1, headers=headers)
         sleep(1)
         re_data = requests.get(url=url2, headers=headers)
-        print("正在运行中...状态码: ", re_data.status_code)
+        print("正在运行等待中...状态码: ", re_data.status_code)
     text = re_data.text[22:-1]
     list = text.split(",{id")
     lists = []
@@ -109,6 +110,7 @@ def main():
         config_info = get_config()
     except:
         print("没有找到config.json配置文件，请将配置文件放在同一目录!")
+        print("也有可能你的config.json文件配置错误，请检查！注意在[]中添加内容时需要添加引号")
         os.system("pause")
         return
     cookies = get_cookie(config_info["student_id"], config_info["password"], config_info["semester_id"])
