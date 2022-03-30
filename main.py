@@ -53,10 +53,13 @@ def grap_class(cookies):
             print("2019级: 1611")
             print("2022/3/29统计")
             profileid = input("请输入profileid:")
-            profileid = str(profileid)
+            profileid = str(profileid)[0:4]
+
     # 循环到选课时间
     url1 = "http://jwxt.xsyu.edu.cn/eams/stdElectCourse!defaultPage.action?electionProfile.id=" + profileid
     url2 = "http://jwxt.xsyu.edu.cn/eams/stdElectCourse!data.action?profileId=" + profileid
+    print(url1)
+    print(url2)
     requests.get(url=url1, headers=headers)  # 求稳
 
     re_data = requests.get(url=url2, headers=headers)
@@ -139,7 +142,6 @@ def grap_class(cookies):
                 print("抢课成功!")
                 return
             print("抢课失败!正在重试")
-            print(rew.text)
         num_flag += 1
         while_flag += 1
 
