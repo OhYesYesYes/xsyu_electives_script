@@ -119,6 +119,7 @@ def grap_class(cookies):
             return
         if num_flag == 5:
             num_flag = 0
+        # 定向，15533
         for i in lists:
             postdata = {"optype": "true",
                         "operator0": str(i) + ":true:0"}
