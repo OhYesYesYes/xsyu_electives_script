@@ -4,7 +4,7 @@ import time
 from time import sleep
 import requests
 from soupsieve import select
-from xsyu_login import get_cookie, waiting, do_not_access_fast
+from xsyu_login import get_cookie, waiting
 import os
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
