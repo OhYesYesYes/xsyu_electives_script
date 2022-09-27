@@ -73,8 +73,9 @@ def grap_class(cookies):
             # 白名单
             q = False
             for j in white_list:
+                q = True
                 if (jsons[wnp].find(j) != -1):
-                    q = True
+                    
                     lists.append(jsons['id'])
                     print(jsons[wnp])
                     break
@@ -109,22 +110,21 @@ def grap_class(cookies):
                 while True:
                     rew = requests.session().post(url=url3,
                                                   data=postdata, headers=headers)
-                    if do_not_access_fast(rew.text) != 0:
+                    if rew.text != 0:
+                        if rew.text.find('失败:该课程可供选择名额已满，请选择其他课程') > 0:
+                            print(i, "课程可供选择名额已满")
+                        elif rew.text.find('失败:人数已满') > 0:
+                            print(i, "课程人数已满")
+                        elif rew.text.find('失败:该课程类别已达本学期学分上限') > 0:
+                            print("抢课失败！你已经选过，请取消选课之后再试!")
+                            return
+                        elif "点击过快" not in rew.text:
+                            print("触发防爬...")
+                            time.sleep(4)
+                        elif "失败" not in rew.text:
+                            print(rew.text)
+                            return
                         continue
-                    else:
-                        break
-                # print(rew.text)
-                if rew.text.find('失败:该课程可供选择名额已满，请选择其他课程') > 0:
-                    print(i, "课程可供选择名额已满")
-                elif rew.text.find('失败:人数已满') > 0:
-                    print(i, "课程人数已满")
-                elif rew.text.find('失败:你已经选过') > 0:
-                    print("抢课失败！你已经选过，请取消选课之后再试!")
-                    return
-                elif rew.text.find('失败') < 0:
-                    print("抢课成功!")
-                    return
-                print("抢课失败!正在重试")
             num_flag += 1
             while_flag += 1
         except:
