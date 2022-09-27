@@ -1,8 +1,17 @@
 import time
 import requests
 import re
-import json
 import datetime
+
+
+def do_not_access_fast(html):
+    rst = re.search(r"请不要过快点击", html)
+    if rst is None:
+        return 0
+    else:
+        print("触发防爬...")
+        time.sleep(3)
+        return -1
 
 
 def get_str_sha1_secret_str(res: str):
@@ -53,7 +62,7 @@ def login_action(usr: str, passwd: str):
 
 def get_cookie(usr: str, passwd: str):
     set_cookie = login_action(usr, passwd).split(";")
-    cookie =set_cookie[0] + ";"
+    cookie = set_cookie[0] + ";"
     print("得到cookie:" + cookie)
     return cookie
 
