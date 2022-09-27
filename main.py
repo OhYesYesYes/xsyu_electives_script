@@ -6,6 +6,8 @@ import requests
 from soupsieve import select
 from xsyu_login import get_cookie, waiting, do_not_access_fast
 import os
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def get_config(path="./config.json"):
@@ -20,54 +22,37 @@ def get_profileid(cookies):
     headers = {"Cookie": cookies}
     # 获得profileId
     url_for_id = "http://jwxt.xsyu.edu.cn/eams/stdElectCourse.action"
-    re_id = ""
-    while True:
-        re_id = requests.get(url=url_for_id, headers=headers)
-        if do_not_access_fast(re_id.text) != 0 and re_id.status_code != 200:
-            re_id = requests.get(url=url_for_id, headers=headers)
-            print("触发防爬或请求错误,正在重试...")
-        else:
-            break
-    id_str = re_id.text.split("confirmElection(")
-    profileid = id_str[1][:4]
-    return profileid
+    flag = True
+    while flag:
+        try:
+            re_id = requests.get(url=url_for_id, verify=False, headers=headers,timeout=(5,10))
+            if "是 否 选 课" in re_id.text:  
+                id_str = re_id.text.split("confirmElection(")
+                profileid = id_str[1][:4]
+                flag = False
+                return profileid
+            sleep(2)
+        except:
+            pass
 
 
 def grap_class(cookies):
     headers = {"Cookie": cookies}
-    # 更快的方法是提前抓取profile填入
-    profileid = "1611"
-    try:
-        profileid = get_profileid(cookies)
-        print("你的profileid为{},请记住,学校服务器有时可能无法得到profileid,届时会转为手动输入!".format(profileid))
-        print("你的profileid为{},请记住,学校服务器有时可能无法得到profileid,届时会转为手动输入!".format(profileid))
-        print("你的profileid为{},请记住,学校服务器有时可能无法得到profileid,届时会转为手动输入!".format(profileid))
-    except:
-        print("发生了错误导致无法请求到profileid，可能是账户密码没有配置或者错误!也可能是教务系统限制了登陆人数")
-        choose = input("需要手动输入吗?[N/y]:")
-        if choose != "y" and choose != "Y":
-            return
-        else:
-            print("2021级: 1616")
-            print("2020级: 1613")
-            print("2019级: 1611")
-            print("2022/3/29统计")
-            profileid = input("请输入profileid:")
-            profileid = str(profileid)[0:4]
-
+    profileid = get_profileid(cookies)
     # 循环到选课时间
     url1 = "http://jwxt.xsyu.edu.cn/eams/stdElectCourse!defaultPage.action?electionProfile.id=" + profileid
     url2 = "http://jwxt.xsyu.edu.cn/eams/stdElectCourse!data.action?profileId=" + profileid
-    print(url1)
-    print(url2)
-    requests.get(url=url1, headers=headers)  # 求稳
-
-    re_data = requests.get(url=url2, headers=headers)
-    while re_data.status_code != 200 and do_not_access_fast(re_data.text) != 0:
-        requests.get(url=url1, headers=headers)
-        sleep(1)
-        re_data = requests.get(url=url2, headers=headers)
-        print("正在运行等待中...状态码: ", re_data.status_code)
+    flag = True
+    while flag:
+        try:
+            requests.get(url=url1, verify=False, headers=headers)
+            re_data = requests.get(url=url2, headers=headers)
+            print("正在运行中...状态码: ", re_data.status_code)
+            if re_data.status_code==200:
+                break
+            sleep(1)
+        except:
+            pass
     text = re_data.text[22:-1]
     list = text.split(",{id")
     lists = []
@@ -88,8 +73,8 @@ def grap_class(cookies):
             # 白名单
             q = False
             for j in white_list:
-                q = True
                 if (jsons[wnp].find(j) != -1):
+                    q = True
                     lists.append(jsons['id'])
                     print(jsons[wnp])
                     break
@@ -112,40 +97,38 @@ def grap_class(cookies):
     url3 = "http://jwxt.xsyu.edu.cn/eams/stdElectCourse!batchOperator.action?profileId=" + profileid
     num_flag = 0
     while True:
-        while_flag = 0
-        if while_flag == 5:
-            print("多次抢课失败，可能是白名单列表的课程没有能选课的，结束抢课")
-            os.system("pause")
-            return
-        if num_flag == 5:
-            num_flag = 0
-        # 定向，15533
-        for i in lists:
-            postdata = {"optype": "true",
-                        "operator0": str(i) + ":true:0"}
-            rew = ""
-            while True:
-                rew = requests.session().post(url=url3,
-                                              data=postdata, headers=headers)
-                if do_not_access_fast(rew.text) != 0:
-                    continue
-                else:
-                    break
-            # print(rew.text)
-            if rew.text.find('失败:该课程可供选择名额已满，请选择其他课程') > 0:
-                print(i, "课程可供选择名额已满")
-            elif rew.text.find('失败:人数已满') > 0:
-                print(i, "课程人数已满")
-            elif rew.text.find('失败:你已经选过') > 0:
-                print("抢课失败！你已经选过，请取消选课之后再试!")
-                return
-            elif rew.text.find('失败') < 0:
-                print("抢课成功!")
-                return
-            print("抢课失败!正在重试")
-        num_flag += 1
-        while_flag += 1
-
+        try:
+            while_flag = 0
+            if num_flag == 5:
+                num_flag = 0
+            # 定向，15533
+            for i in lists:
+                postdata = {"optype": "true",
+                            "operator0": str(i) + ":true:0"}
+                rew = ""
+                while True:
+                    rew = requests.session().post(url=url3,
+                                                  data=postdata, headers=headers)
+                    if do_not_access_fast(rew.text) != 0:
+                        continue
+                    else:
+                        break
+                # print(rew.text)
+                if rew.text.find('失败:该课程可供选择名额已满，请选择其他课程') > 0:
+                    print(i, "课程可供选择名额已满")
+                elif rew.text.find('失败:人数已满') > 0:
+                    print(i, "课程人数已满")
+                elif rew.text.find('失败:你已经选过') > 0:
+                    print("抢课失败！你已经选过，请取消选课之后再试!")
+                    return
+                elif rew.text.find('失败') < 0:
+                    print("抢课成功!")
+                    return
+                print("抢课失败!正在重试")
+            num_flag += 1
+            while_flag += 1
+        except:
+            pass
 
 def main():
     try:
@@ -155,14 +138,8 @@ def main():
         print("也有可能你的config.json文件配置错误，请检查！注意在[]中添加内容时需要添加引号以及使用utf-8")
         os.system("pause")
         return
-    cookies = get_cookie(config_info["student_id"], config_info["password"], config_info["semester_id"])
-    # cookies = "cookie:semester.id=162; JSESSIONID=A4B6BBCEA8879F59D6ED14AC9AD28864.-node1;"
+    cookies = get_cookie(config_info["student_id"], config_info["password"])
     grap_class(cookies)
 
-
-# //2021级1616
-# //2020级1613
-# //2019级1611
-# //2022/3/29
 if __name__ == "__main__":
     main()
