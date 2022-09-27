@@ -61,9 +61,9 @@ def login_action(usr: str, passwd: str):
     return set_cookie
 
 
-def get_cookie(usr: str, passwd: str, semester_id=142):
+def get_cookie(usr: str, passwd: str):
     set_cookie = login_action(usr, passwd).split(";")
-    cookie = "semester.id=" + str(semester_id) + "; " + set_cookie[0] + ";"
+    cookie =set_cookie[0] + ";"
     print("得到cookie:" + cookie)
     return cookie
 
