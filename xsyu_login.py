@@ -5,16 +5,6 @@ import json
 import datetime
 
 
-def do_not_access_fast(html):
-    rst = re.search(r"请不要过快点击", html)
-    if rst is None:
-        return 0
-    else:
-        print("触发防爬...")
-        time.sleep(4)
-        return -1
-
-
 def get_str_sha1_secret_str(res: str):
     import hashlib
     """
